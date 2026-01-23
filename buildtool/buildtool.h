@@ -98,7 +98,7 @@
 /* ---- section: definitions ------------------------------------------------ */
 
 #define BUILDTOOL_VERSION_MAJOR 1
-#define BUILDTOOL_VERSION_MINOR 2
+#define BUILDTOOL_VERSION_MINOR 3
 
 #define BUILDTOOL_VERSION \
     BUILDTOOL_VERSION_MAJOR"."BUILDTOOL_VERSION_MINOR
