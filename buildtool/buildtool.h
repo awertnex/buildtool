@@ -98,7 +98,7 @@
 /* ---- section: definitions ------------------------------------------------ */
 
 #define BUILDTOOL_VERSION_MAJOR 1
-#define BUILDTOOL_VERSION_MINOR 4
+#define BUILDTOOL_VERSION_MINOR 5
 
 #define BUILDTOOL_VERSION \
     BUILDTOOL_VERSION_MAJOR"."BUILDTOOL_VERSION_MINOR
@@ -397,7 +397,7 @@ void cmd_push(_buf *cmd, const str *string)
 
     cmd_init(_cmdp);
 
-    if (!string[0])
+    if (!string || !string[0])
         return;
 
     if (!_cmdp->loaded && mem_alloc_buf(_cmdp, CMD_MEMB, CMD_SIZE, "cmd_push()._cmdp") != ERR_SUCCESS)
@@ -499,6 +499,10 @@ void help(void)
 #endif /* BUILD_H */
 
 /* ---- section: changelog -------------------------------------------------- */
+
+/*  v1.5 (2026 Jan 23):
+ *      Make function 'cmd_push()' handle 'NULL' strings safely.
+ */
 
 /*  v1.4 (2026 Jan 23):
  *      Remove function 'align_up_u64()', not needed
