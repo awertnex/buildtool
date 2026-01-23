@@ -1,10 +1,107 @@
 #ifndef BUILD_H
 #define BUILD_H
 
+/* ---- section: license ---------------------------------------------------- */
+
+/*  MIT License
+ *
+ *  Copyright (c) 2026 Lily Awertnex
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ */
+
+/* ---- section: examples --------------------------------------------------- */
+
+/*  example 1:
+ *
+ *  - build.c: -----------------------------------------------------------------
+ *      #include "buildtool/buildtool.h"
+ *
+ *      int main(int argc, char **argv)
+ *      {
+ *          if (build_init(argc, argv, "build.c", "build") != 0)
+ *              cmd_fail(); // free resources and return error code
+ *
+ *          cmd_exec(4, // number of arguments, excluding this number
+ *                  "gcc",
+ *                  "examples/example1.c",
+ *                  "-o",
+ *                  "example1");
+ *
+ *          cmd_free(); // free resources
+ *          return 0;
+ *      }
+ *
+ *  - shell: -------------------------------------------------------------------
+ *      gcc build.c -o build
+ *      ./build
+ *
+ *  - or on windows, via mingw: ------------------------------------------------
+ *      gcc.exe build.c -o build
+ *      ./build.exe
+ */
+
+/*  example 2:
+ *
+ *  - build.c: -----------------------------------------------------------------
+ *      #include "buildtool/buildtool.h"
+ *
+ *      int main(int argc, char **argv)
+ *      {
+ *          if (build_init(argc, argv, "build.c", "build") != 0)
+ *              cmd_fail(); // free resources and return error code
+ *
+ *          cmd_push(NULL, // NULL to use internal cmd `_cmd`
+ *                  "gcc");
+ *          cmd_push(NULL, "examples/example2_main.c");
+ *          cmd_push(NULL, "examples/example2_util.c");
+ *          cmd_push(NULL, "-o");
+ *          cmd_push(NULL, "example2");
+ *          cmd_ready(NULL);
+ *
+ *          if (exec(&_cmd, "example2_build()._cmd") != 0)
+ *              cmd_fail();
+ *
+ *          cmd_free();
+ *          return 0;
+ *      }
+ *
+ *
+ *  - shell: -------------------------------------------------------------------
+ *      gcc build.c -o build
+ *      ./build
+ *
+ *  - or on windows, via mingw: ------------------------------------------------
+ *      gcc.exe build.c -o build
+ *      ./build.exe
+ */
+
 #include "internal/common.h"
 #include "internal/platform.h"
 
 /* ---- section: definitions ------------------------------------------------ */
+
+#define BUILDTOOL_VERSION_MAJOR 1
+#define BUILDTOOL_VERSION_MINOR 2
+
+#define BUILDTOOL_VERSION \
+    BUILDTOOL_VERSION_MAJOR"."BUILDTOOL_VERSION_MINOR
 
 #define COMPILER "gcc"EXE
 #define CMD_MEMB 64
@@ -25,7 +122,7 @@ enum BuildFlag
  *  
  *  @remark called from @ref build_init() to change current working dirctory.
  */
-static str *DIR_PROC_ROOT = NULL;
+static str *DIR_BUILDTOOL_BIN_ROOT = NULL;
 
 u32 log_level_max = LOGLEVEL_INFO;
 u32 build_err = ERR_SUCCESS;
@@ -72,7 +169,7 @@ static void self_rebuild(char **argv);
 /*! @brief allocate, load, execute and free a command as variadic arguments.
  *
  *  @param n number of arguments passed.
- *  @param ... strings to pass to build command.
+ *  @param ... strings to pass into build command.
  *
  *  @remark return non-zero on failure and @ref build_err is set accordingly.
  */
@@ -81,6 +178,8 @@ static u32 cmd_exec(u64 n, ...);
 /*! @brief push arguments to the build command.
  *
  *  @param cmd cmd to push to, if `NULL`, @ref _cmd is used.
+ *
+ *  @remark `cmd` will be initialized if it isn't.
  */
 static void cmd_push(_buf *cmd, const str *string);
 
@@ -123,16 +222,13 @@ u32 build_init(int argc, char **argv, const str *build_src_name, const str *buil
 
     if (find_token("help", argc, argv)) help();
 
-    if (!DIR_PROC_ROOT)
+    if (!DIR_BUILDTOOL_BIN_ROOT)
     {
-        DIR_PROC_ROOT = get_path_bin_root();
-        if (!DIR_PROC_ROOT)
+        DIR_BUILDTOOL_BIN_ROOT = get_path_bin_root();
+        if (!DIR_BUILDTOOL_BIN_ROOT)
             return build_err;
-        change_dir(DIR_PROC_ROOT);
+        change_dir(DIR_BUILDTOOL_BIN_ROOT);
     }
-
-    if (mem_alloc_buf(&args, ARG_MEMB, ARG_SIZE, "engine_build().args") != ERR_SUCCESS)
-        goto cleanup;
 
     cmd_push(&args, argv[0]);
 
@@ -212,7 +308,7 @@ void self_rebuild(char **argv)
 
     cmd_push(&_cmd, COMPILER);
     cmd_push(&_cmd, "-std=c99");
-    cmd_push(&_cmd, stringf("-ffile-prefix-map=%s=", DIR_PROC_ROOT));
+    cmd_push(&_cmd, stringf("-ffile-prefix-map=%s=", DIR_BUILDTOOL_BIN_ROOT));
     cmd_push(&_cmd, "-Wall");
     cmd_push(&_cmd, "-Wextra");
     cmd_push(&_cmd, "-Wformat-truncation=0");
@@ -281,6 +377,9 @@ void cmd_push(_buf *cmd, const str *string)
     if (!string[0])
         return;
 
+    if (!_cmdp->loaded && mem_alloc_buf(_cmdp, CMD_MEMB, CMD_SIZE, "cmd_push()._cmdp") != ERR_SUCCESS)
+        cmd_fail();
+
     if (_cmdp->cursor >= _cmdp->memb)
     {
         LOGERROR(FALSE, ERR_BUFFER_FULL, "%s\n", "cmd Full");
@@ -314,7 +413,7 @@ void cmd_ready(_buf *cmd)
 
 void cmd_free(void)
 {
-    mem_free((void*)&DIR_PROC_ROOT, CMD_SIZE, "cmd_free().DIR_PROC_ROOT");
+    mem_free((void*)&DIR_BUILDTOOL_BIN_ROOT, CMD_SIZE, "cmd_free().DIR_BUILDTOOL_BIN_ROOT");
     mem_free_buf(&_cmd, "cmd_free()._cmd");
     mem_free_buf(&args, "cmd_free().args");
     _cmd.cursor = 0;
@@ -370,8 +469,28 @@ void help(void)
             "    help       print this help\n"
             "    show       show build command in list format\n"
             "    raw        show build command in raw format\n"
-            "    self       build build tool\n");
+            "    self       build build source\n");
     _exit(ERR_SUCCESS);
 }
 
 #endif /* BUILD_H */
+
+/* ---- section: changelog -------------------------------------------------- */
+
+/*  v1.2 (2026 Jan 23):
+ *      Add README.md.
+ *      Move buildtool files into a bundle directory.
+ *      Finalize template file 'build.c'.
+ */
+
+/*  v1.1 (2026 Jan 23):
+ *      Add intialization for 'cmd' in function 'cmd_push()' if not already intialized.
+ *      Add examples:
+ *          example1.
+ *          example2.
+ *      Fix function 'mem_alloc_buf()' not checking if 'buf' is already allocated.
+ */
+
+/*  v1.0 (2026 Jan 23):
+ *      Initial Commit.
+ */

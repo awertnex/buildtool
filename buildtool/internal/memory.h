@@ -1,6 +1,31 @@
 #ifndef BUILD_MEMORY_H
 #define BUILD_MEMORY_H
 
+/* ---- section: license ---------------------------------------------------- */
+
+/*  MIT License
+ *
+ *  Copyright (c) 2026 Lily Awertnex
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ */
+
 #include "common.h"
 #include "diagnostics.h"
 #include "logger.h"
@@ -34,7 +59,7 @@ extern u64 align_up_u64(u64 n, u64 size);
  *  @param size size in bytes.
  *  @param name pointer name (for logging).
  *
- *  @return non-zero on failure and @ref engine_err is set accordingly.
+ *  @return non-zero on failure and @ref build_err is set accordingly.
  */
 extern u32 _mem_alloc(void **x, u64 size, const str *name, const str *file, u64 line);
 
@@ -151,6 +176,9 @@ u32 _mem_alloc_buf(_buf *x, u64 memb, u64 size, const str *name, const str *file
                 "%s[%p] Failed to Allocate Memory, Pointer NULL\n", name, NULL);
         return build_err;
     }
+
+    if (x->loaded || x->buf || x->i)
+        return ERR_SUCCESS;
 
     snprintf(name_i, NAME_MAX, "%s.i", name);
     snprintf(name_buf, NAME_MAX, "%s.buf", name);
