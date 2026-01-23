@@ -18,8 +18,8 @@ gcc build.c -o build
 
 >**NOTES:**
 >- the function 'build_init()' is important for:
->   - it willsetting the current directory to the build binary's directory (only for the process).
->   - rebuilding build source if either its file changes or it wasn't build it in C89, or if you pass the argument 'self'.
+>   - setting the current directory to the build binary's directory (only for the process).
+>   - rebuilding build source if either the file has changed or it wasn't built in C89, or if you pass the argument 'self'.
 >   - parsing command line arguments:
 >       - 'help': show help and exit
 >       - 'show': show build command in list format

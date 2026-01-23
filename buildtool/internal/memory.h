@@ -32,8 +32,6 @@
 
 #define arr_len(arr) ((u64)sizeof(arr) / sizeof(arr[0]))
 
-extern u64 align_up_u64(u64 n, u64 size);
-
 #define mem_alloc(x, size, name) \
     _mem_alloc(x, size, name, __BASE_FILE__, __LINE__)
 
@@ -106,11 +104,6 @@ extern void _mem_free_buf(_buf *x, const str *name, const str *file, u64 line);
 extern u32 _mem_clear(void **x, u64 size, const str *name, const str *file, u64 line);
 
 /* ---- section: implementation --------------------------------------------- */
-
-u64 align_up_u64(u64 n, u64 size)
-{
-    return (n + (size - 1)) & ~(size - 1);
-}
 
 u32 _mem_alloc(void **x, u64 size, const str *name, const str *file, u64 line)
 {
