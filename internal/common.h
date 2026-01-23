@@ -49,8 +49,13 @@
 
 /* ---- section: types ------------------------------------------------------ */
 
-#define TRUE        1
-#define FALSE       0
+#ifndef TRUE
+#   define TRUE     1
+#endif /* TRUE */
+
+#ifndef FALSE
+#   define FALSE    0
+#endif /* FALSE */
 
 typedef uint8_t     u8;
 typedef uint16_t    u16;

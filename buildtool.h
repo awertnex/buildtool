@@ -1,10 +1,107 @@
 #ifndef BUILD_H
 #define BUILD_H
 
+/* ---- section: license ---------------------------------------------------- */
+
+/*  MIT License
+ *
+ *  Copyright (c) 2026 Lily Awertnex
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ */
+
+/* ---- section: examples --------------------------------------------------- */
+
+/*  example 1:
+ *
+ *  - build.c: -----------------------------------------------------------------
+ *      #include "buildtool.h"
+ *
+ *      int main(int argc, char **argv)
+ *      {
+ *          if (build_init(argc, argv, "build.c", "build") != 0)
+ *              cmd_fail(); // free resources and return error code
+ *
+ *          cmd_exec(4, // number of arguments, excluding this number
+ *                  "gcc",
+ *                  "examples/example1.c",
+ *                  "-o",
+ *                  "example1");
+ *
+ *          cmd_free(); // free resources
+ *          return 0;
+ *      }
+ *
+ *  - shell: -------------------------------------------------------------------
+ *      gcc build.c -o build
+ *      ./build
+ *
+ *  - or on windows, via mingw: ------------------------------------------------
+ *      gcc.exe build.c -o build
+ *      ./build.exe
+ */
+
+/*  example 2:
+ *
+ *  - build.c: -----------------------------------------------------------------
+ *      #include "buildtool.h"
+ *
+ *      int main(int argc, char **argv)
+ *      {
+ *          if (build_init(argc, argv, "build.c", "build") != 0)
+ *              cmd_fail(); // free resources and return error code
+ *
+ *          cmd_push(NULL, // NULL to use internal cmd `_cmd`
+ *                  "gcc");
+ *          cmd_push(NULL, "examples/example2_main.c");
+ *          cmd_push(NULL, "examples/example2_util.c");
+ *          cmd_push(NULL, "-o");
+ *          cmd_push(NULL, "example2");
+ *          cmd_ready(NULL);
+ *
+ *          if (exec(&_cmd, "example2_build()._cmd") != 0)
+ *              cmd_fail();
+ *
+ *          cmd_free();
+ *          return 0;
+ *      }
+ *
+ *
+ *  - shell: -------------------------------------------------------------------
+ *      gcc build.c -o build
+ *      ./build
+ *
+ *  - or on windows, via mingw: ------------------------------------------------
+ *      gcc.exe build.c -o build
+ *      ./build.exe
+ */
+
 #include "internal/common.h"
 #include "internal/platform.h"
 
 /* ---- section: definitions ------------------------------------------------ */
+
+#define BUILDTOOL_VERSION_MAJOR 1
+#define BUILDTOOL_VERSION_MINOR 1
+
+#define BUILDTOOL_VERSION \
+    BUILDTOOL_VERSION_MAJOR"."BUILDTOOL_VERSION_MINOR
 
 #define COMPILER "gcc"EXE
 #define CMD_MEMB 64
@@ -81,6 +178,8 @@ static u32 cmd_exec(u64 n, ...);
 /*! @brief push arguments to the build command.
  *
  *  @param cmd cmd to push to, if `NULL`, @ref _cmd is used.
+ *
+ *  @remark `cmd` will be initialized if it isn't.
  */
 static void cmd_push(_buf *cmd, const str *string);
 
@@ -281,6 +380,9 @@ void cmd_push(_buf *cmd, const str *string)
     if (!string[0])
         return;
 
+    if (!_cmdp->loaded && mem_alloc_buf(_cmdp, CMD_MEMB, CMD_SIZE, "cmd_push()._cmdp") != ERR_SUCCESS)
+        cmd_fail();
+
     if (_cmdp->cursor >= _cmdp->memb)
     {
         LOGERROR(FALSE, ERR_BUFFER_FULL, "%s\n", "cmd Full");
@@ -375,3 +477,17 @@ void help(void)
 }
 
 #endif /* BUILD_H */
+
+/* ---- section: changelog -------------------------------------------------- */
+
+/*  v1.1 (2026 Jan 23):
+ *      Add intialization for 'cmd' in function 'cmd_push()' if not already intialized.
+ *      Add examples:
+ *          example1.
+ *          example2.
+ *      Fix function 'mem_alloc_buf()' not checking if 'buf' is already allocated.
+ */
+
+/*  v1.0 (2026 Jan 23):
+ *      Initial Commit.
+ */
