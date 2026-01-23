@@ -144,7 +144,7 @@ static _buf args = {0};
  *      show:       show build command in list format.
  *      raw:        show build command in raw format.
  *      self:       build build tool.
- *  - check if source uses a c-standard other than c99 and re-build with `-std=c99` if true.
+ *  - check if source uses a c-standard other than c89 and re-build with `-std=c89` if true.
  *  - check if source at `build_bin_name` has changed and rebuild if true.
  *
  *  @param argc number of arguments in `argv` if `argv` provided.
@@ -251,9 +251,9 @@ u32 build_init(int argc, char **argv, const str *build_src_name, const str *buil
     if (mem_alloc_buf(&_cmd, CMD_MEMB, CMD_SIZE, "build_init()._cmd") != ERR_SUCCESS)
         goto cleanup;
 
-    if (STD != 199901)
+    if (STD != 89)
     {
-        LOGINFO(FALSE, "%s\n", "Rebuilding Self With -std=c99..");
+        LOGINFO(FALSE, "%s\n", "Rebuilding Self With -std=c89..");
         self_rebuild((char**)args.i);
     }
 
@@ -307,7 +307,7 @@ void self_rebuild(char **argv)
     flag &= ~FLAG_BUILD_SELF;
 
     cmd_push(&_cmd, COMPILER);
-    cmd_push(&_cmd, "-std=c99");
+    cmd_push(&_cmd, "-std=c89");
     cmd_push(&_cmd, stringf("-ffile-prefix-map=%s=", DIR_BUILDTOOL_BIN_ROOT));
     cmd_push(&_cmd, "-Wall");
     cmd_push(&_cmd, "-Wextra");
@@ -477,20 +477,24 @@ void help(void)
 
 /* ---- section: changelog -------------------------------------------------- */
 
+/*  v1.3 (2026 Jan 23):
+ *      Change C standard of build tool 'C99' -> 'C89'
+ */
+
 /*  v1.2 (2026 Jan 23):
- *      Add README.md.
- *      Move buildtool files into a bundle directory.
- *      Finalize template file 'build.c'.
+ *      Add README.md
+ *      Move buildtool files into a bundle directory
+ *      Finalize template file 'build.c'
  */
 
 /*  v1.1 (2026 Jan 23):
- *      Add intialization for 'cmd' in function 'cmd_push()' if not already intialized.
+ *      Add intialization for 'cmd' in function 'cmd_push()' if not already intialized
  *      Add examples:
- *          example1.
- *          example2.
- *      Fix function 'mem_alloc_buf()' not checking if 'buf' is already allocated.
+ *          example1
+ *          example2
+ *      Fix function 'mem_alloc_buf()' not checking if 'buf' is already allocated
  */
 
 /*  v1.0 (2026 Jan 23):
- *      Initial Commit.
+ *      Initial Commit
  */

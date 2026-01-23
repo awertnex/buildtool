@@ -52,14 +52,10 @@
 #   define SLASH_NON_NATIVE '/'
 #endif /* PLATFORM */
 
-#ifdef __STDC_VERSION__
-#   if (__STDC_VERSION__ == 199901)
-#       define STD __STDC_VERSION__
-#   else
-#       define STD 0
-#   endif
-#else
+#if defined(__STDC_VERSION__)
 #   define STD 0
+#elif defined(__STDC__)
+#   define STD 89
 #endif /* STD */
 
 #include <errno.h>
