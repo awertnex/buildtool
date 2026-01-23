@@ -31,7 +31,7 @@
 /*  example 1:
  *
  *  - build.c: -----------------------------------------------------------------
- *      #include "buildtool.h"
+ *      #include "buildtool/buildtool.h"
  *
  *      int main(int argc, char **argv)
  *      {
@@ -60,7 +60,7 @@
 /*  example 2:
  *
  *  - build.c: -----------------------------------------------------------------
- *      #include "buildtool.h"
+ *      #include "buildtool/buildtool.h"
  *
  *      int main(int argc, char **argv)
  *      {
@@ -98,7 +98,7 @@
 /* ---- section: definitions ------------------------------------------------ */
 
 #define BUILDTOOL_VERSION_MAJOR 1
-#define BUILDTOOL_VERSION_MINOR 1
+#define BUILDTOOL_VERSION_MINOR 2
 
 #define BUILDTOOL_VERSION \
     BUILDTOOL_VERSION_MAJOR"."BUILDTOOL_VERSION_MINOR
@@ -122,7 +122,7 @@ enum BuildFlag
  *  
  *  @remark called from @ref build_init() to change current working dirctory.
  */
-static str *DIR_PROC_ROOT = NULL;
+static str *DIR_BUILDTOOL_BIN_ROOT = NULL;
 
 u32 log_level_max = LOGLEVEL_INFO;
 u32 build_err = ERR_SUCCESS;
@@ -169,7 +169,7 @@ static void self_rebuild(char **argv);
 /*! @brief allocate, load, execute and free a command as variadic arguments.
  *
  *  @param n number of arguments passed.
- *  @param ... strings to pass to build command.
+ *  @param ... strings to pass into build command.
  *
  *  @remark return non-zero on failure and @ref build_err is set accordingly.
  */
@@ -222,16 +222,13 @@ u32 build_init(int argc, char **argv, const str *build_src_name, const str *buil
 
     if (find_token("help", argc, argv)) help();
 
-    if (!DIR_PROC_ROOT)
+    if (!DIR_BUILDTOOL_BIN_ROOT)
     {
-        DIR_PROC_ROOT = get_path_bin_root();
-        if (!DIR_PROC_ROOT)
+        DIR_BUILDTOOL_BIN_ROOT = get_path_bin_root();
+        if (!DIR_BUILDTOOL_BIN_ROOT)
             return build_err;
-        change_dir(DIR_PROC_ROOT);
+        change_dir(DIR_BUILDTOOL_BIN_ROOT);
     }
-
-    if (mem_alloc_buf(&args, ARG_MEMB, ARG_SIZE, "engine_build().args") != ERR_SUCCESS)
-        goto cleanup;
 
     cmd_push(&args, argv[0]);
 
@@ -311,7 +308,7 @@ void self_rebuild(char **argv)
 
     cmd_push(&_cmd, COMPILER);
     cmd_push(&_cmd, "-std=c99");
-    cmd_push(&_cmd, stringf("-ffile-prefix-map=%s=", DIR_PROC_ROOT));
+    cmd_push(&_cmd, stringf("-ffile-prefix-map=%s=", DIR_BUILDTOOL_BIN_ROOT));
     cmd_push(&_cmd, "-Wall");
     cmd_push(&_cmd, "-Wextra");
     cmd_push(&_cmd, "-Wformat-truncation=0");
@@ -416,7 +413,7 @@ void cmd_ready(_buf *cmd)
 
 void cmd_free(void)
 {
-    mem_free((void*)&DIR_PROC_ROOT, CMD_SIZE, "cmd_free().DIR_PROC_ROOT");
+    mem_free((void*)&DIR_BUILDTOOL_BIN_ROOT, CMD_SIZE, "cmd_free().DIR_BUILDTOOL_BIN_ROOT");
     mem_free_buf(&_cmd, "cmd_free()._cmd");
     mem_free_buf(&args, "cmd_free().args");
     _cmd.cursor = 0;
@@ -472,13 +469,19 @@ void help(void)
             "    help       print this help\n"
             "    show       show build command in list format\n"
             "    raw        show build command in raw format\n"
-            "    self       build build tool\n");
+            "    self       build build source\n");
     _exit(ERR_SUCCESS);
 }
 
 #endif /* BUILD_H */
 
 /* ---- section: changelog -------------------------------------------------- */
+
+/*  v1.2 (2026 Jan 23):
+ *      Add README.md.
+ *      Move buildtool files into a bundle directory.
+ *      Finalize template file 'build.c'.
+ */
 
 /*  v1.1 (2026 Jan 23):
  *      Add intialization for 'cmd' in function 'cmd_push()' if not already intialized.

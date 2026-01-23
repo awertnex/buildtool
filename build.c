@@ -1,20 +1,18 @@
-#include "buildtool.h"
+#include "buildtool/buildtool.h"
 
 int main(int argc, char **argv)
 {
-    if (build_init(argc, argv, "build.c", "build") != 0)
-        cmd_fail(); // free resources and return error code
-
-    cmd_push(NULL, // NULL to use internal cmd `_cmd`
-            "gcc");
-    cmd_push(NULL, "examples/example2_main.c");
-    cmd_push(NULL, "examples/example2_util.c");
-    cmd_push(NULL, "-o");
-    cmd_push(NULL, "example2");
-    cmd_ready(NULL);
-
-    if (exec(&_cmd, "example2_build()._cmd") != 0)
+    if (build_init(argc, argv, "build.c", "build") != ERR_SUCCESS)
         cmd_fail();
+
+    cmd_exec(7,
+            COMPILER,
+            "file1.c",
+            "file2.c",
+            "-Wall",
+            "-Wextra",
+            "-o",
+            "output_file");
 
     cmd_free();
     return 0;

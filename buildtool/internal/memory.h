@@ -59,7 +59,7 @@ extern u64 align_up_u64(u64 n, u64 size);
  *  @param size size in bytes.
  *  @param name pointer name (for logging).
  *
- *  @return non-zero on failure and @ref engine_err is set accordingly.
+ *  @return non-zero on failure and @ref build_err is set accordingly.
  */
 extern u32 _mem_alloc(void **x, u64 size, const str *name, const str *file, u64 line);
 
