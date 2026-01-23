@@ -28,7 +28,7 @@
 
 /* ---- section: examples --------------------------------------------------- */
 
-/*  example 1:
+/*  example 1: a single command.
  *
  *  - build.c: -----------------------------------------------------------------
  *      #include "buildtool/buildtool.h"
@@ -53,11 +53,11 @@
  *      ./build
  *
  *  - or on windows, via mingw: ------------------------------------------------
- *      gcc.exe build.c -o build
+ *      gcc.exe build.c -o build.exe
  *      ./build.exe
  */
 
-/*  example 2:
+/*  example 2: load command now, execute later.
  *
  *  - build.c: -----------------------------------------------------------------
  *      #include "buildtool/buildtool.h"
@@ -73,7 +73,7 @@
  *          cmd_push(NULL, "examples/example2_util.c");
  *          cmd_push(NULL, "-o");
  *          cmd_push(NULL, "example2");
- *          cmd_ready(NULL);
+ *          cmd_ready(NULL); // finalize command (important for configuring based on platform).
  *
  *          if (exec(&_cmd, "example2_build()._cmd") != 0)
  *              cmd_fail();
@@ -88,7 +88,7 @@
  *      ./build
  *
  *  - or on windows, via mingw: ------------------------------------------------
- *      gcc.exe build.c -o build
+ *      gcc.exe build.c -o build.exe
  *      ./build.exe
  */
 
@@ -98,7 +98,7 @@
 /* ---- section: definitions ------------------------------------------------ */
 
 #define BUILDTOOL_VERSION_MAJOR 1
-#define BUILDTOOL_VERSION_MINOR 3
+#define BUILDTOOL_VERSION_MINOR 4
 
 #define BUILDTOOL_VERSION \
     BUILDTOOL_VERSION_MAJOR"."BUILDTOOL_VERSION_MINOR
@@ -174,6 +174,12 @@ static void self_rebuild(char **argv);
  *  @remark return non-zero on failure and @ref build_err is set accordingly.
  */
 static u32 cmd_exec(u64 n, ...);
+
+/*! @brief allocate resources for `cmd` if not initialized.
+ *
+ *  @param cmd cmd to initialize, if `NULL`, @ref _cmd is used.
+ */
+static void cmd_init(_buf *cmd);
 
 /*! @brief push arguments to the build command.
  *
@@ -340,8 +346,7 @@ u32 cmd_exec(u64 n, ...)
     u64 i = 0;
     str temp[CMD_SIZE] = {0};
 
-    if (mem_alloc_buf(&cmd, align_up_u64(n, CMD_MEMB), CMD_SIZE, "cmd_exec().cmd") != ERR_SUCCESS)
-        return build_err;
+    cmd_init(&cmd);
 
     va_start(va, n);
     for (i = 0; i < n; ++i)
@@ -368,11 +373,29 @@ cleanup:
     return build_err;
 }
 
+void cmd_init(_buf *cmd)
+{
+    if (!cmd)
+    {
+        LOGFATAL(TRUE, ERR_POINTER_NULL, "%s\n",
+                "Failed to Initialize 'cmd', Pointer NULL, Process Aborted\n");
+        cmd_fail();
+    }
+
+    if (cmd->loaded)
+        return;
+
+    if (mem_alloc_buf(cmd, CMD_MEMB, CMD_SIZE, "cmd_init().cmd") != ERR_SUCCESS)
+        cmd_fail();
+}
+
 void cmd_push(_buf *cmd, const str *string)
 {
     _buf *_cmdp = cmd;
     if (!cmd)
         _cmdp = &_cmd;
+
+    cmd_init(_cmdp);
 
     if (!string[0])
         return;
@@ -476,6 +499,13 @@ void help(void)
 #endif /* BUILD_H */
 
 /* ---- section: changelog -------------------------------------------------- */
+
+/*  v1.4 (2026 Jan 23):
+ *      Remove function 'align_up_u64()', not needed
+ *      Add function 'cmd_init()' that gets called inside 'cmd_push()':
+ *          Checks if cmd is initialized, initializes if not
+ *      Fix README.md
+ */
 
 /*  v1.3 (2026 Jan 23):
  *      Change C standard of build tool 'C99' -> 'C89'
