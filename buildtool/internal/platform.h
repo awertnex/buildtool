@@ -181,18 +181,16 @@ u32 is_file_exists(const str *name, b8 log)
         else
         {
             if (log)
-            {
-                LOGERROR(TRUE, ERR_IS_NOT_FILE, "'%s' is Not a Regular File\n", name);
-            }
+                LOGERROR(ERR_IS_NOT_FILE, TRUE,
+                        "'%s' is Not a Regular File\n", name);
             else build_err = ERR_IS_NOT_FILE;
             return build_err;
         }
     }
 
     if (log)
-    {
-        LOGERROR(TRUE, ERR_FILE_NOT_FOUND, "File '%s' Not Found\n", name);
-    }
+        LOGERROR(ERR_FILE_NOT_FOUND, TRUE,
+                "File '%s' Not Found\n", name);
     else build_err = ERR_FILE_NOT_FOUND;
     return build_err;
 }
@@ -226,18 +224,16 @@ u32 is_dir_exists(const str *name, b8 log)
         else
         {
             if (log)
-            {
-                LOGERROR(TRUE, ERR_IS_NOT_DIR, "'%s' is Not a Directory\n", name);
-            }
+                LOGERROR(ERR_IS_NOT_DIR, TRUE,
+                        "'%s' is Not a Directory\n", name);
             else build_err = ERR_IS_NOT_DIR;
             return build_err;
         }
     }
 
     if (log)
-    {
-        LOGERROR(TRUE, ERR_DIR_NOT_FOUND, "Directory '%s' Not Found\n", name);
-    }
+        LOGERROR(ERR_DIR_NOT_FOUND, TRUE,
+                "Directory '%s' Not Found\n", name);
     else build_err = ERR_DIR_NOT_FOUND;
     return build_err;
 }
@@ -252,7 +248,8 @@ u64 get_file_contents(const str *name, void **dst, u64 size, b8 terminate)
 
     if ((file = fopen(name, "rb")) == NULL)
     {
-        LOGERROR(TRUE, ERR_FILE_OPEN_FAIL, "Failed to Open File '%s'\n", name);
+        LOGERROR(ERR_FILE_OPEN_FAIL, TRUE,
+                "Failed to Open File '%s'\n", name);
         return 0;
     }
 
@@ -369,8 +366,8 @@ u32 copy_file(const str *src, const str *dst)
 
     if ((out_file = fopen(str_dst, "wb")) == NULL)
     {
-        LOGERROR(FALSE, ERR_FILE_OPEN_FAIL, "Failed to Copy File '%s' -> '%s'\n",
-                src, str_dst);
+        LOGERROR(ERR_FILE_OPEN_FAIL, FALSE,
+                "Failed to Copy File '%s' -> '%s'\n", src, str_dst);
         return build_err;
     }
 
@@ -384,7 +381,8 @@ u32 copy_file(const str *src, const str *dst)
     fwrite(in_file, 1, len, out_file);
     fclose(out_file);
 
-    LOGTRACE(FALSE, "File Copied '%s' -> '%s'\n", src, str_dst);
+    LOGTRACE(FALSE,
+            "File Copied '%s' -> '%s'\n", src, str_dst);
 
     build_err = ERR_SUCCESS;
     return build_err;
@@ -435,7 +433,8 @@ u32 copy_dir(const str *src, const str *dst, b8 contents_only)
         copy_file(in_dir, out_dir);
     }
 
-    LOGTRACE(FALSE, "Directory Copied '%s' -> '%s'\n", src, str_dst);
+    LOGTRACE(FALSE,
+            "Directory Copied '%s' -> '%s'\n", src, str_dst);
 
     build_err = ERR_SUCCESS;
     return build_err;
@@ -449,7 +448,8 @@ str *get_path_absolute(const str *name)
 
     if (strlen(name) >= PATH_MAX - 1)
     {
-        LOGERROR(TRUE, ERR_GET_PATH_ABSOLUTE_FAIL, "%s\n", "Failed to Get Absolute Path, Path Too Long");
+        LOGERROR(ERR_GET_PATH_ABSOLUTE_FAIL, TRUE,
+                "%s\n", "Failed to Get Absolute Path, Path Too Long");
         return NULL;
     }
 
@@ -462,7 +462,7 @@ str *get_path_absolute(const str *name)
     len = strlen(path_absolute) + 1;
 
     if (mem_alloc((void*)&result, sizeof(str*) * (len + 1),
-                "get_path_absolute().path_absolute") != ERR_SUCCESS)
+                "get_path_absolute().result") != ERR_SUCCESS)
         return NULL;
 
     strncpy(result, path_absolute, len);
@@ -485,7 +485,7 @@ str *get_path_bin_root(void)
     len = strlen(path_bin_root) + 1;
     if (len >= PATH_MAX - 1)
     {
-        LOGFATAL(TRUE, ERR_PATH_TOO_LONG,
+        LOGFATAL(ERR_PATH_TOO_LONG, TRUE,
                 "Path Too Long '%s', Process Aborted\n", path_bin_root);
         return NULL;
     }

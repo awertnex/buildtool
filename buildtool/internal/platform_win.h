@@ -40,7 +40,8 @@ u32 make_dir(const str *path)
 {
     if (mkdir(path) == 0)
     {
-        LOGINFO(FALSE, "Directory Created '%s'\n", path);
+        LOGTRACE(FALSE,
+                "Directory Created '%s'\n", path);
         build_err = ERR_SUCCESS;
         return build_err;
     }
@@ -52,7 +53,8 @@ u32 make_dir(const str *path)
             break;
 
         default:
-            LOGERROR(TRUE, ERR_DIR_CREATE_FAIL, "Failed to Create Directory '%s'\n", path);
+            LOGERROR(ERR_DIR_CREATE_FAIL, TRUE,
+                    "Failed to Create Directory '%s'\n", path);
     }
 
     return build_err;
@@ -61,7 +63,8 @@ u32 make_dir(const str *path)
 int change_dir(const str *path)
 {
     int success = _chdir(path);
-    LOGTRACE(TRUE, "Working Directory Changed to '%s'\n", path);
+    LOGTRACE(TRUE,
+            "Working Directory Changed to '%s'\n", path);
     return success;
 }
 
@@ -82,7 +85,7 @@ u32 _get_path_bin_root(str *path)
 {
     if (strlen(_pgmptr) + 1 >= PATH_MAX)
     {
-        LOGFATAL(FALSE, ERR_GET_PATH_BIN_ROOT_FAIL,
+        LOGFATAL(ERR_GET_PATH_BIN_ROOT_FAIL, FALSE,
                 "%s\n", "Failed 'get_path_bin_root()', Process Aborted");
         return build_err;
     }
@@ -107,8 +110,8 @@ u32 exec(_buf *cmd, str *cmd_name)
 
     if (!cmd->loaded || !cmd->buf)
     {
-        LOGERROR(TRUE, ERR_BUFFER_EMPTY,
-                "Failed to Execute '%s', cmd Empty\n", cmd_name);
+        LOGERROR(ERR_PROCESS_FORK_FAIL, TRUE,
+                "Failed to Fork '%s'\n", cmd_name);
         return build_err;
     }
 
@@ -122,7 +125,7 @@ u32 exec(_buf *cmd, str *cmd_name)
     if(!CreateProcessA(NULL, cmd_cat, NULL, NULL, FALSE, 0, NULL, NULL,
                 &startup_info, &process_info))
     {
-        LOGFATAL(TRUE, ERR_EXEC_FAIL,
+        LOGFATAL(ERR_EXEC_FAIL, TRUE,
                 "Failed to Fork '%s', Process Aborted\n", cmd_name);
         goto cleanup;
     }
@@ -135,11 +138,13 @@ u32 exec(_buf *cmd, str *cmd_name)
     CloseHandle(process_info.hThread);
 
     if (exit_code == 0)
-        LOGINFO(FALSE, "'%s' Success, Exit Code: %d\n", cmd_name, exit_code);
+        LOGINFO(FALSE,
+                "'%s' Success, Exit Code: %d\n", cmd_name, exit_code);
     else
     {
+        LOGINFO(TRUE,
+                "'%s' Exit Code: %d\n", cmd_name, exit_code);
         build_err = ERR_EXEC_PROCESS_NON_ZERO;
-        LOGINFO(TRUE, "'%s' Exit Code: %d\n", cmd_name, exit_code);
         goto cleanup;
     }
 

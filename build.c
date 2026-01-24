@@ -14,6 +14,5 @@ int main(int argc, char **argv)
             "-o",
             "output_file");
 
-    cmd_free();
     return 0;
 }

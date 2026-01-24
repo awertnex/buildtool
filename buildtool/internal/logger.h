@@ -30,7 +30,7 @@
 
 /* ---- section: definitions ------------------------------------------------ */
 
-enum /* LogLevel */
+enum /* log_level */
 {
     LOGLEVEL_FATAL,
     LOGLEVEL_ERROR,
@@ -39,7 +39,7 @@ enum /* LogLevel */
     LOGLEVEL_DEBUG,
     LOGLEVEL_TRACE,
     LOGLEVEL_COUNT,
-}; /* LogLevel */
+}; /* log_level */
 
 /* ---- section: declarations ----------------------------------------------- */
 
@@ -68,64 +68,45 @@ static str *esc_code_color[LOGLEVEL_COUNT] =
 
 /* ---- section: signatures ------------------------------------------------- */
 
-#define LOGFATAL(verbose, err, format, ...) \
-{ \
-    build_err = (u32)err; \
-    _log_output(verbose, __BASE_FILE__, __LINE__, LOGLEVEL_FATAL, err, format, ##__VA_ARGS__); \
-}
+#define LOGFATAL(err, verbose, format, ...) \
+    _log_output(err, verbose, __BASE_FILE__, __LINE__, LOGLEVEL_FATAL, format, ##__VA_ARGS__)
 
-#define LOGERROR(verbose, err, format, ...) \
-{ \
-    build_err = (u32)err; \
-    _log_output(verbose, __BASE_FILE__, __LINE__, LOGLEVEL_ERROR, err, format, ##__VA_ARGS__); \
-}
+#define LOGERROR(err, verbose, format, ...) \
+    _log_output(err, verbose, __BASE_FILE__, __LINE__, LOGLEVEL_ERROR, format, ##__VA_ARGS__)
 
-#define LOGWARNING(verbose, err, format, ...) \
-{ \
-    build_err = (u32)err; \
-    _log_output(verbose, __BASE_FILE__, __LINE__, LOGLEVEL_WARNING, err, format, ##__VA_ARGS__); \
-}
+#define LOGWARNING(err, verbose, format, ...) \
+    _log_output(err, verbose, __BASE_FILE__, __LINE__, LOGLEVEL_WARNING, format, ##__VA_ARGS__)
 
 #define LOGINFO(verbose, format, ...) \
-    _log_output(verbose, __BASE_FILE__, __LINE__, LOGLEVEL_INFO, ERR_SUCCESS, format, ##__VA_ARGS__)
+    _log_output(ERR_SUCCESS, verbose, __BASE_FILE__, __LINE__, LOGLEVEL_INFO, format, ##__VA_ARGS__)
 
 #define LOGDEBUG(verbose, format, ...) \
-    _log_output(verbose, __BASE_FILE__, __LINE__, LOGLEVEL_DEBUG, ERR_SUCCESS, format, ##__VA_ARGS__)
+    _log_output(ERR_SUCCESS, verbose, __BASE_FILE__, __LINE__, LOGLEVEL_DEBUG, format, ##__VA_ARGS__)
 
 #define LOGTRACE(verbose, format, ...) \
-    _log_output(verbose, __BASE_FILE__, __LINE__, LOGLEVEL_TRACE, ERR_SUCCESS, format, ##__VA_ARGS__)
+    _log_output(ERR_SUCCESS, verbose, __BASE_FILE__, __LINE__, LOGLEVEL_TRACE, format, ##__VA_ARGS__)
 
-#define LOGFATALEX(verbose, file, line, err, format, ...); \
-{ \
-    build_err = (u32)err; \
-    _log_output(verbose, file, line, LOGLEVEL_FATAL, err, format, ##__VA_ARGS__); \
-}
+#define LOGFATALEX(err, verbose, file, line, format, ...) \
+    _log_output(err, verbose, file, line, LOGLEVEL_FATAL, format, ##__VA_ARGS__)
 
-#define LOGERROREX(verbose, file, line, err, format, ...); \
-{ \
-    build_err = (u32)err; \
-    _log_output(verbose, file, line, LOGLEVEL_ERROR, err, format, ##__VA_ARGS__); \
-}
+#define LOGERROREX(err, verbose, file, line, format, ...) \
+    _log_output(err, verbose, file, line, LOGLEVEL_ERROR, format, ##__VA_ARGS__)
 
-#define LOGWARNINGEX(verbose, file, line, err, format, ...) \
-{ \
-    build_err = (u32)err; \
-    _log_output(verbose, file, line, LOGLEVEL_WARNING, err, format, ##__VA_ARGS__); \
-}
+#define LOGWARNINGEX(err, verbose, file, line, format, ...) \
+    _log_output(err, verbose, file, line, LOGLEVEL_WARNING, format, ##__VA_ARGS__)
 
 #define LOGINFOEX(verbose, file, line, format, ...) \
-    _log_output(verbose, file, line, LOGLEVEL_INFO, ERR_SUCCESS, format, ##__VA_ARGS__)
+    _log_output(ERR_SUCCESS, verbose, file, line, LOGLEVEL_INFO, format, ##__VA_ARGS__)
 
 #define LOGDEBUGEX(verbose, file, line, format, ...) \
-    _log_output(verbose, file, line, LOGLEVEL_DEBUG, ERR_SUCCESS, format, ##__VA_ARGS__)
+    _log_output(ERR_SUCCESS, verbose, file, line, LOGLEVEL_DEBUG, format, ##__VA_ARGS__)
 
 #define LOGTRACEEX(verbose, file, line, format, ...) \
-    _log_output(verbose, file, line, LOGLEVEL_TRACE, ERR_SUCCESS, format, ##__VA_ARGS__)
+    _log_output(ERR_SUCCESS, verbose, file, line, LOGLEVEL_TRACE, format, ##__VA_ARGS__)
 
 /*! -- INTERNAL USE ONLY --;
  */
-extern void _log_output(b8 verbose, const str *file, u64 line, u8 level,
-        u32 error_code, const str *format, ...);
+extern void _log_output(u32 error_code, b8 verbose, const str *file, u64 line, u8 level, const str *format, ...);
 
 /*! -- INTERNAL USE ONLY --;
  */
@@ -134,12 +115,13 @@ extern void _get_log_str(const str *str_in, str *str_out, b8 verbose,
 
 /* ---- section: implementation --------------------------------------------- */
 
-void _log_output(b8 verbose, const str *file, u64 line, u8 level,
-        u32 error_code, const str *format, ...)
+void _log_output(u32 error_code, b8 verbose, const str *file, u64 line, u8 level, const str *format, ...)
 {
     __builtin_va_list args;
     str str_in[STRING_MAX] = {0};
     str str_out[OUT_STRING_MAX] = {0};
+
+    build_err = error_code;
 
     if (level > log_level_max) return;
 
