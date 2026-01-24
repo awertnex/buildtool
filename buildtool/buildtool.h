@@ -27,6 +27,12 @@
 
 /* ---- section: changelog -------------------------------------------------- */
 
+/*  v1.6.1 (2026 Jan 24):
+ *      - Fix segfault when copying file into destination that's a directory without
+ *        specifying the destination file name
+ *      - Add function 'get_base_name()' to get base name of a path
+ */
+
 /*  v1.6 (2026 Jan 24):
  *      - Remove auto-allocation for '_cmd' in function 'build_init()' so freeing
  *        it isn't mandatory unless 'cmd_push()' is used
@@ -200,9 +206,10 @@
 
 #define BUILDTOOL_VERSION_MAJOR 1
 #define BUILDTOOL_VERSION_MINOR 6
+#define BUILDTOOL_VERSION_PATCH 1
 
 #define BUILDTOOL_VERSION \
-    BUILDTOOL_VERSION_MAJOR"."BUILDTOOL_VERSION_MINOR
+    BUILDTOOL_VERSION_MAJOR"."BUILDTOOL_VERSION_MINOR"."BUILDTOOL_VERSION_PATCH
 
 #define COMPILER "gcc"EXE
 #define CMD_MEMB 64

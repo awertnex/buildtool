@@ -166,6 +166,14 @@ extern void check_slash(str *path);
  */
 extern void posix_slash(str *path);
 
+/*! @brief get base name of `path`.
+ *
+ *  @param size max size of `dst` to use.
+ *
+ *  @return non-zero on failure and @ref build_err is set accordingly.
+ */
+extern u32 get_base_name(const str *path, str *dst, u64 size);
+
 /* ---- section: implementation --------------------------------------------- */
 
 u32 is_file_exists(const str *name, b8 log)
@@ -362,7 +370,11 @@ u32 copy_file(const str *src, const str *dst)
     snprintf(str_dst, PATH_MAX, "%s", dst);
 
     if (is_dir(dst) == ERR_SUCCESS)
-        strncat(str_dst, strrchr(src, SLASH_NATIVE), PATH_MAX - 1);
+    {
+        check_slash(str_dst);
+        get_base_name(src, str_dst + strlen(str_dst), PATH_MAX);
+        posix_slash(str_dst);
+    }
 
     if ((out_file = fopen(str_dst, "wb")) == NULL)
     {
@@ -556,4 +568,55 @@ void posix_slash(str *path)
     build_err = ERR_SUCCESS;
 }
 
+u32 get_base_name(const str *path, str *dst, u64 size)
+{
+    i64 i = 0;
+    u64 len = 0;
+    str path_resolved[PATH_MAX] = {0};
+
+    if (size == 0)
+    {
+        LOGERROR(ERR_SIZE_TOO_SMALL, TRUE,
+                "Failed to Get Base Name of '%s', 'size' Too Small\n", path);
+        return build_err;
+    }
+
+    if (!path || !path[0] || !dst)
+    {
+        LOGERROR(ERR_POINTER_NULL, TRUE,
+                "%s\n", "Failed to Get Base Name, Pointer NULL");
+        return build_err;
+    }
+
+    len = strlen(path);
+    if (len >= PATH_MAX - 1)
+    {
+        LOGERROR(ERR_PATH_TOO_LONG, TRUE,
+                "Failed to Get Base Name of '%s', Path Too Long\n", path);
+        return build_err;
+    }
+
+    snprintf(path_resolved, PATH_MAX, "%s", path);
+    posix_slash(path_resolved);
+
+    i = (i64)len - 1;
+    if (path_resolved[i] == '/')
+    {
+        if (i == 0)
+        {
+            dst[0] = '/';
+            build_err = ERR_SUCCESS;
+            return build_err;
+        }
+        else --i;
+    }
+
+    while (i > 0 && path_resolved[i - 1] != '/')
+        --i;
+
+    snprintf(dst, size, "%s", path_resolved + i);
+
+    build_err = ERR_SUCCESS;
+    return build_err;
+}
 #endif /* BUILD_PLATFORM_H */
