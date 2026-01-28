@@ -407,13 +407,13 @@ u32 copy_file(const str *src, const str *dst)
 
     if (stats.st_atim.tv_nsec == 0)
         stats.st_atim.tv_nsec = 1;
-    else if (state.st_atim.tv_nsec >= 1000000000L)
-        state.st_atim.tv_nsec = 1000000000L - 1;
+    else if (stats.st_atim.tv_nsec >= 1000000000L)
+        stats.st_atim.tv_nsec = 1000000000L - 1;
 
     if (stats.st_mtim.tv_nsec == 0)
         stats.st_mtim.tv_nsec = 1;
-    else if (state.st_mtim.tv_nsec >= 1000000000L)
-        state.st_mtim.tv_nsec = 1000000000L - 1;
+    else if (stats.st_mtim.tv_nsec >= 1000000000L)
+        stats.st_mtim.tv_nsec = 1000000000L - 1;
 
     ts[0] = stats.st_atim;
     ts[1] = stats.st_mtim;
@@ -483,13 +483,13 @@ u32 copy_dir(const str *src, const str *dst, b8 contents_only)
 
     if (stats.st_atim.tv_nsec == 0)
         stats.st_atim.tv_nsec = 1;
-    else if (state.st_atim.tv_nsec >= 1000000000L)
-        state.st_atim.tv_nsec = 1000000000L - 1;
+    else if (stats.st_atim.tv_nsec >= 1000000000L)
+        stats.st_atim.tv_nsec = 1000000000L - 1;
 
     if (stats.st_mtim.tv_nsec == 0)
         stats.st_mtim.tv_nsec = 1;
-    else if (state.st_mtim.tv_nsec >= 1000000000L)
-        state.st_mtim.tv_nsec = 1000000000L - 1;
+    else if (stats.st_mtim.tv_nsec >= 1000000000L)
+        stats.st_mtim.tv_nsec = 1000000000L - 1;
 
     ts[0] = stats.st_atim;
     ts[1] = stats.st_mtim;
