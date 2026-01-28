@@ -17,6 +17,7 @@ gcc build.c -o build
 ```
 
 >**NOTES:**
+>- changelog can be found at the top in 'buildtool/buildtool.h'
 >- the function 'build_init()' is important for:
 >   - setting the current directory to the build binary's directory (only for the process).
 >   - rebuilding build source if either the file has changed or it wasn't built in C89, or if you pass the argument 'self'.
