@@ -405,6 +405,16 @@ u32 copy_file(const str *src, const str *dst)
                 "Failed to Copy File Permissions '%s' -> '%s', 'stat()' Failed\n",
                 src, str_dst);
 
+    if (stats.st_atim.tv_nsec == 0)
+        stats.st_atim.tv_nsec = 1;
+    else if (state.st_atim.tv_nsec >= 1000000000L)
+        state.st_atim.tv_nsec = 1000000000L - 1;
+
+    if (stats.st_mtim.tv_nsec == 0)
+        stats.st_mtim.tv_nsec = 1;
+    else if (state.st_mtim.tv_nsec >= 1000000000L)
+        state.st_mtim.tv_nsec = 1000000000L - 1;
+
     ts[0] = stats.st_atim;
     ts[1] = stats.st_mtim;
     utimensat(AT_FDCWD, str_dst, ts, 0);
@@ -470,6 +480,16 @@ u32 copy_dir(const str *src, const str *dst, b8 contents_only)
         LOGWARNING(ERR_FILE_STAT_FAIL, FALSE,
                 "Failed to Copy Directory Permissions '%s' -> '%s', 'stat()' Failed\n",
                 str_src, str_dst);
+
+    if (stats.st_atim.tv_nsec == 0)
+        stats.st_atim.tv_nsec = 1;
+    else if (state.st_atim.tv_nsec >= 1000000000L)
+        state.st_atim.tv_nsec = 1000000000L - 1;
+
+    if (stats.st_mtim.tv_nsec == 0)
+        stats.st_mtim.tv_nsec = 1;
+    else if (state.st_mtim.tv_nsec >= 1000000000L)
+        state.st_mtim.tv_nsec = 1000000000L - 1;
 
     ts[0] = stats.st_atim;
     ts[1] = stats.st_mtim;

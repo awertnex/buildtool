@@ -28,6 +28,7 @@
 
 /*  v<version> (YYYY MMM DD):
  *      - Change `COMPILER` 'gcc' -> 'cc'
+ *      - Add guards around copying `tv_nsec` in `copy_dir()` and `copy_file()`
  */
 
 /*  v1.6.2 (2026 Jan 28):
