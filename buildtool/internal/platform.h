@@ -405,10 +405,8 @@ u32 copy_file(const str *src, const str *dst)
                 "Failed to Copy File Permissions '%s' -> '%s', 'stat()' Failed\n",
                 src, str_dst);
 
-    ts[0].tv_sec = stats.st_atim.tv_sec;
-    ts[0].tv_nsec = stats.st_atim.tv_nsec;
-    ts[1].tv_sec = stats.st_mtim.tv_sec;
-    ts[1].tv_nsec = stats.st_mtim.tv_nsec;
+    ts[0] = stats.st_atim;
+    ts[1] = stats.st_mtim;
     utimensat(AT_FDCWD, str_dst, ts, 0);
 
     build_err = ERR_SUCCESS;
@@ -473,10 +471,8 @@ u32 copy_dir(const str *src, const str *dst, b8 contents_only)
                 "Failed to Copy Directory Permissions '%s' -> '%s', 'stat()' Failed\n",
                 str_src, str_dst);
 
-    ts[0].tv_sec = stats.st_atim.tv_sec;
-    ts[0].tv_nsec = stats.st_atim.tv_nsec;
-    ts[1].tv_sec = stats.st_mtim.tv_sec;
-    ts[1].tv_nsec = stats.st_mtim.tv_nsec;
+    ts[0] = stats.st_atim;
+    ts[1] = stats.st_mtim;
     utimensat(AT_FDCWD, str_dst, ts, 0);
 
     build_err = ERR_SUCCESS;

@@ -26,6 +26,10 @@
 
 /* ---- section: changelog -------------------------------------------------- */
 
+/*  v<version> (YYYY MMM DD):
+ *      - Change `COMPILER` 'gcc' -> 'cc'
+ */
+
 /*  v1.6.2 (2026 Jan 28):
  *      - `copy_dir()` bug fix and new features:
  *          - Fix parameter `contents_only` not working
@@ -214,14 +218,17 @@
 
 /* ---- section: definitions ------------------------------------------------ */
 
+#define BUILDTOOL_VERSION_STABLE    ""
+#define BUILDTOOL_VERSION_BETA      "-beta"
+#define BUILDTOOL_VERSION_ALPHA     "-alpha"
+#define BUILDTOOL_VERSION_DEV       "-dev"
+
 #define BUILDTOOL_VERSION_MAJOR 1
 #define BUILDTOOL_VERSION_MINOR 6
 #define BUILDTOOL_VERSION_PATCH 2
+#define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_DEV
 
-#define BUILDTOOL_VERSION \
-    BUILDTOOL_VERSION_MAJOR"."BUILDTOOL_VERSION_MINOR"."BUILDTOOL_VERSION_PATCH
-
-#define COMPILER "gcc"EXE
+#define COMPILER "cc"EXE
 #define CMD_MEMB 64
 #define CMD_SIZE 256
 #define ARG_MEMB 64
@@ -258,10 +265,11 @@ static _buf args = {0};
  *
  *  - allocate resources for @ref _cmd and other internals.
  *  - parse commands in `argv`, with no particular order:
- *      help:       show help and exit.
- *      show:       show build command in list format.
- *      raw:        show build command in raw format.
- *      self:       build build tool.
+ *      -v, --version   show version and exit.
+ *      help            show help and exit.
+ *      show            show build command in list format.
+ *      raw             show build command in raw format.
+ *      self            build build tool.
  *  - check if source uses a c-standard other than c89 and re-build with `-std=c89` if true.
  *  - check if source at `build_bin_name` has changed and rebuild if true.
  *
@@ -334,6 +342,7 @@ static void cmd_show(_buf *cmd);
 static void cmd_raw(_buf *cmd);
 
 static void help(void);
+static void print_version(void);
 
 /* ---- section: implementation --------------------------------------------- */
 
@@ -345,6 +354,11 @@ u32 build_init(int argc, char **argv, const str *build_src_name, const str *buil
     u64 tokens[3] = {0};
 
     if (find_token("help", argc, argv)) help();
+
+    if (    
+            find_token("-v", argc, argv) ||
+            find_token("--version", argc, argv))
+        print_version();
 
     if (!DIR_BUILDTOOL_BIN_ROOT)
     {
@@ -623,4 +637,13 @@ void help(void)
     _exit(ERR_SUCCESS);
 }
 
+void print_version(void)
+{
+    printf("buildtool - v%u.%u.%u%s\n",
+            BUILDTOOL_VERSION_MAJOR,
+            BUILDTOOL_VERSION_MINOR,
+            BUILDTOOL_VERSION_PATCH,
+            BUILDTOOL_VERSION_BUILD);
+    _exit(ERR_SUCCESS);
+}
 #endif /* BUILD_H */
