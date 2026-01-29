@@ -26,10 +26,11 @@
 
 /* ---- section: changelog -------------------------------------------------- */
 
-/*  v<version> (YYYY MMM DD):
+/*  v1.7.0 (2026 Jan 29):
  *      - Change `COMPILER` 'gcc' -> 'cc'
  *      - Add guards around copying `tv_nsec` in `copy_dir()` and `copy_file()`
  *      - Improve windows support, just a little bit, it's still shit
+ *      - Initialize all uninitialized values in file 'internal/platform.h'
  */
 
 /*  v1.6.2 (2026 Jan 28):
@@ -226,9 +227,9 @@
 #define BUILDTOOL_VERSION_DEV       "-dev"
 
 #define BUILDTOOL_VERSION_MAJOR 1
-#define BUILDTOOL_VERSION_MINOR 6
-#define BUILDTOOL_VERSION_PATCH 2
-#define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_DEV
+#define BUILDTOOL_VERSION_MINOR 7
+#define BUILDTOOL_VERSION_PATCH 0
+#define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_BETA
 
 #define COMPILER "cc"EXE
 #define CMD_MEMB 64
