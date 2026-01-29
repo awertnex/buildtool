@@ -29,6 +29,7 @@
 /*  v<version> (YYYY MMM DD):
  *      - Change `COMPILER` 'gcc' -> 'cc'
  *      - Add guards around copying `tv_nsec` in `copy_dir()` and `copy_file()`
+ *      - Improve windows support, just a little bit, it's still shit
  */
 
 /*  v1.6.2 (2026 Jan 28):
@@ -647,4 +648,5 @@ void print_version(void)
             BUILDTOOL_VERSION_BUILD);
     _exit(ERR_SUCCESS);
 }
+
 #endif /* BUILD_H */
