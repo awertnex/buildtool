@@ -27,6 +27,10 @@
 /* ---- section: changelog -------------------------------------------------- */
 
 /*  v1.8.0-beta (2026 01 30):
+ *      - (2026 01 30): Make functions `cmd_show()` and `cmd_raw()` print only
+ *                      once per build
+ *      - (2026 01 30): Add `show` and `raw` to function `cmd_fail()` to show
+ *                      build command even if failure
  *      - (2026 01 30): Move functions `make_dir()` and `change_dir()`
  *                      implementations to file `platform.h`
  *      - (2026 01 30): Add `bt_mkdir()`, `bt_chdir()`, `bt_stat()` and
@@ -119,7 +123,7 @@
  *      int main(int argc, char **argv)
  *      {
  *          if (build_init(argc, argv, "build.c", "build") != 0)
- *              cmd_fail(); // free resources and return error code
+ *              cmd_fail(NULL); // free resources and return error code
  *
  *          cmd_exec(4, // number of arguments, excluding this number
  *                  "gcc",
@@ -151,7 +155,7 @@
  *      int main(int argc, char **argv)
  *      {
  *          if (build_init(argc, argv, "build.c", "build") != 0)
- *              cmd_fail(); // free resources and return error code
+ *              cmd_fail(NULL); // free resources and return error code
  *
  *          cmd_push(NULL, // NULL to use internal cmd `_cmd`
  *                  "gcc");
@@ -162,7 +166,7 @@
  *          cmd_ready(NULL); // finalize command (important for configuring based on platform).
  *
  *          if (exec(&_cmd, "example2_build()._cmd") != 0)
- *              cmd_fail();
+ *              cmd_fail(NULL);
  *
  *          cmd_free(NULL); // (NULL to free internal resources)
  *          return 0;
@@ -344,8 +348,10 @@ static void cmd_ready(_buf *cmd);
 static void cmd_free(_buf *cmd);
 
 /*! @remark can force-terminate process.
+ *
+ *  @param cmd cmd to show, if `NULL`, @ref _cmd is used.
  */
-static void cmd_fail(void);
+static void cmd_fail(_buf *cmd);
 
 /*! @brief show build command in list format.
  *
@@ -480,12 +486,12 @@ void self_rebuild(char **argv)
         execvp(argv[0], (str *const *)argv);
         LOGFATAL(ERR_EXECVP_FAIL, FALSE,
                 "%s\n", "'build"EXE"' Failed, Process Aborted");
-        cmd_fail();
+        cmd_fail(&_cmd);
     }
 
     LOGFATAL(build_err, FALSE,
             "%s\n", "Self-Rebuild Failed, Process Aborted");
-    cmd_fail();
+    cmd_fail(&_cmd);
 }
 
 u32 cmd_exec(u64 n, ...)
@@ -517,8 +523,8 @@ u32 cmd_exec(u64 n, ...)
 
 cleanup:
 
-    mem_free_buf(&cmd, "cmd_build().cmd");
-    cmd_fail();
+    mem_free_buf(&cmd, "cmd_exec().cmd");
+    cmd_fail(&cmd);
     return build_err;
 }
 
@@ -528,14 +534,14 @@ void cmd_init(_buf *cmd)
     {
         LOGFATAL(ERR_POINTER_NULL, TRUE,
                 "%s\n", "Failed to Initialize 'cmd', Pointer NULL, Process Aborted\n");
-        cmd_fail();
+        cmd_fail(cmd);
     }
 
     if (cmd->loaded)
         return;
 
     if (mem_alloc_buf(cmd, CMD_MEMB, CMD_SIZE, "cmd_init().cmd") != ERR_SUCCESS)
-        cmd_fail();
+        cmd_fail(cmd);
 }
 
 void cmd_push(_buf *cmd, const str *string)
@@ -550,7 +556,7 @@ void cmd_push(_buf *cmd, const str *string)
         return;
 
     if (!_cmdp->loaded && mem_alloc_buf(_cmdp, CMD_MEMB, CMD_SIZE, "cmd_push()._cmdp") != ERR_SUCCESS)
-        cmd_fail();
+        cmd_fail(_cmdp);
 
     if (_cmdp->cursor >= _cmdp->memb)
     {
@@ -602,9 +608,19 @@ void cmd_free(_buf *cmd)
     }
 }
 
-void cmd_fail(void)
+void cmd_fail(_buf *cmd)
 {
-    cmd_free(NULL);
+    _buf *_cmdp = cmd;
+    if (!_cmdp)
+        _cmdp = &_cmd;
+
+    if (_cmdp)
+    {
+        if (flag & FLAG_CMD_SHOW) cmd_show(_cmdp);
+        if (flag & FLAG_CMD_RAW) cmd_raw(_cmdp);
+    }
+
+    cmd_free(_cmdp);
     _exit(build_err);
 }
 
@@ -613,6 +629,8 @@ void cmd_show(_buf *cmd)
     _buf *_cmdp = cmd;
     if (!cmd)
         _cmdp = &_cmd;
+
+    flag &= ~FLAG_CMD_SHOW;
 
     printf("\nCMD:\n");
     u32 i = 0;
@@ -631,6 +649,8 @@ void cmd_raw(_buf *cmd)
     _buf *_cmdp = cmd;
     if (!cmd)
         _cmdp = &_cmd;
+
+    flag &= ~FLAG_CMD_RAW;
 
     printf("\nCMD RAW:\n");
     u32 i = 0;

@@ -3,7 +3,7 @@
 int main(int argc, char **argv)
 {
     if (build_init(argc, argv, "build.c", "build") != ERR_SUCCESS)
-        cmd_fail();
+        cmd_fail(NULL);
 
     cmd_exec(7,
             COMPILER,
