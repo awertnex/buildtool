@@ -21,12 +21,27 @@
  *  SOFTWARE.
  */
 
-#ifndef BUILD_H
-#define BUILD_H
+#ifndef BUILDTOOL_H
+#define BUILDTOOL_H
 
 /* ---- section: changelog -------------------------------------------------- */
 
-/*  v1.7.0 (2026 Jan 29):
+/*  v1.8.0-beta (2026 01 30):
+ *      - (2026 01 30): Move functions `make_dir()` and `change_dir()`
+ *                      implementations to file `platform.h`
+ *      - (2026 01 30): Add `bt_mkdir()`, `bt_chdir()`, `bt_stat()` and
+ *                      `bt_chmod()` for platform abstraction
+ *      - (2026 01 30): Treat symlinks as files in function `is_file_exists()`
+ *      - (2026 01 30): Use proper error-handling for function `readlink()` in
+                        function `get_path_bin_root()`
+ *      - (2026 01 30): Truncate string buffer in function `get_path_bin_root()`
+ *      - (2026 01 30): Preserve symlinks when using `copy_file()` and
+ *                      `copy_dir()`
+ *      - (2026 01 29): Add function `get_file_type()`
+ *      - (2026 01 29): Add file `TASKS.md`
+ */
+
+/*  v1.7.0-beta (2026 Jan 29):
  *      - Change `COMPILER` 'gcc' -> 'cc'
  *      - Add guards around copying `tv_nsec` in `copy_dir()` and `copy_file()`
  *      - Improve windows support, just a little bit, it's still shit
@@ -227,7 +242,7 @@
 #define BUILDTOOL_VERSION_DEV       "-dev"
 
 #define BUILDTOOL_VERSION_MAJOR 1
-#define BUILDTOOL_VERSION_MINOR 7
+#define BUILDTOOL_VERSION_MINOR 8
 #define BUILDTOOL_VERSION_PATCH 0
 #define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_BETA
 
@@ -650,4 +665,4 @@ void print_version(void)
     _exit(ERR_SUCCESS);
 }
 
-#endif /* BUILD_H */
+#endif /* BUILDTOOL_H */
