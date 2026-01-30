@@ -26,6 +26,12 @@
 
 /* ---- section: changelog -------------------------------------------------- */
 
+/*  v1.8.1-beta (2026 01 30):
+ *      - (2026 01 30): Patch dumb error at `copy_file()`: passing
+ *                      `strlen(in_file)` instead of `len`, which made things
+ *                      explode
+ */
+
 /*  v1.8.0-beta (2026 01 30):
  *      - (2026 01 30): Make functions `cmd_show()` and `cmd_raw()` print only
  *                      once per build
@@ -247,7 +253,7 @@
 
 #define BUILDTOOL_VERSION_MAJOR 1
 #define BUILDTOOL_VERSION_MINOR 8
-#define BUILDTOOL_VERSION_PATCH 0
+#define BUILDTOOL_VERSION_PATCH 1
 #define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_BETA
 
 #define COMPILER "cc"EXE
