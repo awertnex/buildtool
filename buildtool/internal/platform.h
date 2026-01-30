@@ -186,7 +186,7 @@ extern u32 get_base_name(const str *path, str *dst, u64 size);
 u32 get_file_type(const str *name, u32 *type)
 {
     struct stat stats = {0};
-    if (lstat(name, &stats) == 0)
+    if (bt_stat(name, &stats) == 0)
     {
         if (S_ISREG(stats.st_mode))
             *type = FILE_TYPE_REG;
@@ -475,7 +475,7 @@ u32 copy_file(const str *src, const str *dst)
                     "File Copied '%s' -> '%s'\n", src, str_dst);
 
             fclose(out_file);
-            mem_free((void*)&in_file, strlen(in_file), "copy_file().in_file");
+            mem_free((void*)&in_file, len, "copy_file().in_file");
 
             if (bt_stat(src, &stats) == 0)
                 bt_chmod(str_dst, stats.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO));
@@ -588,7 +588,7 @@ u32 copy_dir(const str *src, const str *dst, b8 contents_only)
             "Directory Copied '%s' -> '%s'\n", src, str_dst);
 
     if (bt_stat(str_src, &stats) == 0)
-        chmod(str_dst, stats.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO));
+        bt_chmod(str_dst, stats.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO));
     else
         LOGWARNING(ERR_FILE_STAT_FAIL, FALSE,
                 "Failed to Copy Directory Permissions '%s' -> '%s', 'bt_stat()' Failed\n",
