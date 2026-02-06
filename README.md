@@ -17,13 +17,13 @@ cc build.c -o build
 ```
 
 >**NOTES:**
->- changelog can be found at the top in 'buildtool/buildtool.h'
->- the function 'build_init()' is important for:
->   - setting the current directory to the build binary's directory (only for the process).
+>- changelog can be found at the top of `buildtool/buildtool.h`
+>- the function `build_init()` is important for:
+>   - changing the current working directory to the build binary's directory (only for the process).
 >   - rebuilding build source if either the file has changed or it wasn't built in C89, or if you pass the argument 'self'.
->   - parsing command line arguments:
->       - 'help':           show help and exit
+>   - some more arguments:
+>       - help:             show help and exit
 >       - -v, --version:    show version and exit.
->       - 'show':           show build command in list format
->       - 'raw':            show build command in raw format
->       - 'self':           re-build build source
+>       - show:             show build command in list format
+>       - raw:              show build command in raw format
+>       - self:             re-build build source
