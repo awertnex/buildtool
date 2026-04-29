@@ -26,7 +26,7 @@
 
 /* ---- section: changelog -------------------------------------------------- */
 
-/*  v1.8.3-dev (current):
+/*  v1.8.4-beta (2026 04 29):
  *      - (2026 04 29): Add debug mode for buildtool (via command "btdebug")
  */
 
@@ -275,8 +275,8 @@
 
 #define BUILDTOOL_VERSION_MAJOR 1
 #define BUILDTOOL_VERSION_MINOR 8
-#define BUILDTOOL_VERSION_PATCH 3
-#define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_DEV
+#define BUILDTOOL_VERSION_PATCH 4
+#define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_BETA
 
 #define COMPILER "cc"EXE
 #define CMD_MEMB 64
