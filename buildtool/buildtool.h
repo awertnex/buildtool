@@ -26,6 +26,9 @@
 
 /* ---- section: changelog -------------------------------------------------- */
 
+/*  v1.8.3-dev (current):
+ */
+
 /*  v1.8.3-beta (2026 04 29):
  *      - (2026 04 29): Add log level 'SUCCESS'
  *      - (2026 04 29): Add parameter `should_rebuild` to function
@@ -272,7 +275,7 @@
 #define BUILDTOOL_VERSION_MAJOR 1
 #define BUILDTOOL_VERSION_MINOR 8
 #define BUILDTOOL_VERSION_PATCH 3
-#define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_BETA
+#define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_DEV
 
 #define COMPILER "cc"EXE
 #define CMD_MEMB 64
