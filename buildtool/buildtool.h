@@ -26,6 +26,15 @@
 
 /* ---- section: changelog -------------------------------------------------- */
 
+/*  v1.8.3-beta (2026 04 29):
+ *      - (2026 04 29): Add log level 'SUCCESS'
+ *      - (2026 04 29): Add parameter `should_rebuild` to function
+ *                      `self_rebuild()` to enable/disable building software
+ *                      after building self
+ *      - (2026 04 29): Fix C89 pedantic errors:
+ *          - variadic macros (logger macros such as `LOGINFO()` etc..)
+ */
+
 /*  v1.8.2-beta (2026 02 06):
  *      - (2026 02 06): Add cflag `-Wpedantic` in function `self_rebuild()`
  *      - (2026 02 06): Add `NULL` termination to function `cmd_exec()`:
@@ -262,7 +271,7 @@
 
 #define BUILDTOOL_VERSION_MAJOR 1
 #define BUILDTOOL_VERSION_MINOR 8
-#define BUILDTOOL_VERSION_PATCH 2
+#define BUILDTOOL_VERSION_PATCH 3
 #define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_BETA
 
 #define COMPILER "cc"EXE
@@ -274,8 +283,7 @@
 enum build_flag
 {
     FLAG_CMD_SHOW =     0x0001,
-    FLAG_CMD_RAW =      0x0002,
-    FLAG_BUILD_SELF =   0x0004
+    FLAG_CMD_RAW =      0x0002
 }; /* build_flag */
 
 /* ---- section: declarations ----------------------------------------------- */
@@ -326,8 +334,10 @@ static u32 build_init(int argc, char **argv, const str *build_src_name, const st
 static u32 is_build_source_changed(void);
 
 /*! @remark can force-terminate process.
+ *
+ *  @param should_rebuild enable/disable re-building application after building self.
  */
-static void self_rebuild(char **argv);
+static void self_rebuild(char **argv, b8 should_rebuild);
 
 /*! @brief allocate, load, execute and free a command as variadic arguments.
  *
@@ -389,12 +399,8 @@ static void print_version(void);
 
 u32 build_init(int argc, char **argv, const str *build_src_name, const str *build_bin_name)
 {
-    const u64 TOKEN_SELF = 0;
-    const u64 TOKEN_SHOW = 1;
-    const u64 TOKEN_RAW = 2;
-    u64 tokens[3] = {0};
-
-    if (find_token("help", argc, argv)) help();
+    if (find_token("help", argc, argv))
+        help();
 
     if (
             find_token("-v", argc, argv) ||
@@ -411,14 +417,8 @@ u32 build_init(int argc, char **argv, const str *build_src_name, const str *buil
 
     cmd_push(&args, argv[0]);
 
-    tokens[TOKEN_SELF] = find_token("self", argc, argv);
-    tokens[TOKEN_SHOW] = find_token("show", argc, argv);
-    tokens[TOKEN_RAW] = find_token("raw", argc, argv);
-
-    if (tokens[TOKEN_SELF])
-        flag |= FLAG_BUILD_SELF;
-    if (tokens[TOKEN_SHOW]) flag |= FLAG_CMD_SHOW;
-    if (tokens[TOKEN_RAW]) flag |= FLAG_CMD_RAW;
+    if (find_token("show", argc, argv)) flag |= FLAG_CMD_SHOW;
+    if (find_token("raw", argc, argv)) flag |= FLAG_CMD_RAW;
 
     snprintf(str_build_src, CMD_SIZE, "%s", build_src_name);
     posix_slash(str_build_src);
@@ -427,18 +427,25 @@ u32 build_init(int argc, char **argv, const str *build_src_name, const str *buil
     snprintf(str_build_bin_new, CMD_SIZE, "%s_new", build_bin_name);
     snprintf(str_build_bin_old, CMD_SIZE, "%s_old", build_bin_name);
 
+    if (find_token("self", argc, argv))
+    {
+        LOGINFO(FALSE,
+                logger_stringf("%s\n", "Rebuilding Self.."));
+        self_rebuild((char**)args.i, FALSE);
+    }
+
     if (STD != 89)
     {
         LOGINFO(FALSE,
-                "%s\n", "Rebuilding Self With -std=c89..");
-        self_rebuild((char**)args.i);
+                logger_stringf("%s\n", "Rebuilding Self With -std=c89.."));
+        self_rebuild((char**)args.i, TRUE);
     }
 
-    if (flag & FLAG_BUILD_SELF || is_build_source_changed() == ERR_SUCCESS)
+    if (is_build_source_changed() == ERR_SUCCESS)
     {
         LOGINFO(FALSE,
-                "%s\n", "Rebuilding Self..");
-        self_rebuild((char**)args.i);
+                logger_stringf("%s\n", "Rebuilding Self.."));
+        self_rebuild((char**)args.i, TRUE);
     }
 
     build_err = ERR_SUCCESS;
@@ -457,7 +464,7 @@ u32 is_build_source_changed(void)
     else
     {
         LOGERROR(ERR_FILE_NOT_FOUND, FALSE,
-                "%s\n", "Build Source File Not Found");
+                logger_stringf("%s\n", "Build Source File Not Found"));
         return build_err;
     }
 
@@ -466,7 +473,7 @@ u32 is_build_source_changed(void)
     else
     {
         LOGERROR(ERR_FILE_NOT_FOUND, FALSE,
-                "%s\n", "File 'build"EXE"' Not Found");
+                logger_stringf("%s\n", "File 'build" EXE "' Not Found"));
         return build_err;
     }
 
@@ -477,10 +484,8 @@ u32 is_build_source_changed(void)
     return build_err;
 }
 
-void self_rebuild(char **argv)
+void self_rebuild(char **argv, b8 should_rebuild)
 {
-    flag &= ~FLAG_BUILD_SELF;
-
     cmd_push(&_cmd, COMPILER);
     cmd_push(&_cmd, "-std=c89");
     cmd_push(&_cmd, stringf("-ffile-prefix-map=%s=", DIR_BUILDTOOL_BIN_ROOT));
@@ -495,20 +500,28 @@ void self_rebuild(char **argv)
 
     if (exec(&_cmd, "self_rebuild()") == ERR_SUCCESS)
     {
-        LOGINFO(FALSE,
-                "%s\n", "Self Rebuild Success");
+        LOGSUCCESS(FALSE,
+                logger_stringf("%s\n", "Self Rebuild Success"));
         rename(str_build_bin, str_build_bin_old);
         rename(str_build_bin_new, str_build_bin);
         remove(str_build_bin_old);
 
-        execvp(argv[0], (str *const *)argv);
-        LOGFATAL(ERR_EXECVP_FAIL, FALSE,
-                "%s\n", "'build"EXE"' Failed, Process Aborted");
-        cmd_fail(&_cmd);
+        if (should_rebuild)
+        {
+            execvp(argv[0], (str *const *)argv);
+            LOGFATAL(ERR_EXECVP_FAIL, FALSE,
+                    logger_stringf("%s\n", "'build" EXE "' Failed, Process Aborted"));
+            cmd_fail(&_cmd);
+        }
+        else
+        {
+            cmd_free(&_cmd);
+            _exit(ERR_SUCCESS);
+        }
     }
 
     LOGFATAL(build_err, FALSE,
-            "%s\n", "Self-Rebuild Failed, Process Aborted");
+            logger_stringf("%s\n", "Self-Rebuild Failed, Process Aborted"));
     cmd_fail(&_cmd);
 }
 
@@ -560,7 +573,7 @@ void cmd_init(_buf *cmd)
     if (!cmd)
     {
         LOGFATAL(ERR_POINTER_NULL, TRUE,
-                "%s\n", "Failed to Initialize 'cmd', Pointer NULL, Process Aborted\n");
+                logger_stringf("%s\n", "Failed to Initialize 'cmd', Pointer NULL, Process Aborted\n"));
         cmd_fail(cmd);
     }
 
@@ -588,19 +601,19 @@ void cmd_push(_buf *cmd, const str *string)
     if (_cmdp->cursor >= _cmdp->memb)
     {
         LOGERROR(ERR_BUFFER_FULL, FALSE,
-                "%s\n", "cmd Full");
+                logger_stringf("%s\n", "cmd Full"));
         return;
     }
 
     if (strlen(string) >= _cmdp->size)
     {
         LOGERROR(ERR_STRING_TOO_LONG, FALSE,
-                "Failed to Push String '%s' to cmd.i[%"PRIu64"], String Too Long\n", string, _cmdp->cursor);
+                logger_stringf("Failed to Push String '%s' to cmd.i[%"PRIu64"], String Too Long\n", string, _cmdp->cursor));
         return;
     }
 
     LOGTRACE(FALSE,
-            "Pushing String '%s' to cmd.i[%"PRIu64"]..\n", string, _cmdp->cursor);
+            logger_stringf("Pushing String '%s' to cmd.i[%"PRIu64"]..\n", string, _cmdp->cursor));
     strncpy(_cmdp->i[_cmdp->cursor++], string, CMD_SIZE);
 }
 
