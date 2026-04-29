@@ -26,6 +26,10 @@
 
 /* ---- section: changelog -------------------------------------------------- */
 
+/*  v1.8.3-dev (current):
+ *      - (2026 04 29): Add debug mode for buildtool (via command "btdebug")
+ */
+
 /*  v1.8.3-beta (2026 04 29):
  *      - (2026 04 29): Add log level 'SUCCESS'
  *      - (2026 04 29): Add parameter `should_rebuild` to function
@@ -272,7 +276,7 @@
 #define BUILDTOOL_VERSION_MAJOR 1
 #define BUILDTOOL_VERSION_MINOR 8
 #define BUILDTOOL_VERSION_PATCH 3
-#define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_BETA
+#define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_DEV
 
 #define COMPILER "cc"EXE
 #define CMD_MEMB 64
@@ -282,8 +286,9 @@
 
 enum build_flag
 {
-    FLAG_CMD_SHOW =     0x0001,
-    FLAG_CMD_RAW =      0x0002
+    FLAG_CMD_SHOW =         0x0001,
+    FLAG_CMD_RAW =          0x0002,
+    FLAG_SELF_BUILD_DEBUG = 0x0004
 }; /* build_flag */
 
 /* ---- section: declarations ----------------------------------------------- */
@@ -419,6 +424,11 @@ u32 build_init(int argc, char **argv, const str *build_src_name, const str *buil
 
     if (find_token("show", argc, argv)) flag |= FLAG_CMD_SHOW;
     if (find_token("raw", argc, argv)) flag |= FLAG_CMD_RAW;
+    if (find_token("btdebug", argc, argv))
+    {
+        flag |= FLAG_SELF_BUILD_DEBUG;
+        log_level_max = LOGLEVEL_TRACE;
+    }
 
     snprintf(str_build_src, CMD_SIZE, "%s", build_src_name);
     posix_slash(str_build_src);
@@ -427,7 +437,7 @@ u32 build_init(int argc, char **argv, const str *build_src_name, const str *buil
     snprintf(str_build_bin_new, CMD_SIZE, "%s_new", build_bin_name);
     snprintf(str_build_bin_old, CMD_SIZE, "%s_old", build_bin_name);
 
-    if (find_token("self", argc, argv))
+    if (flag & FLAG_SELF_BUILD_DEBUG || find_token("self", argc, argv))
     {
         LOGINFO(FALSE,
                 logger_stringf("%s\n", "Rebuilding Self.."));
@@ -489,10 +499,14 @@ void self_rebuild(char **argv, b8 should_rebuild)
     cmd_push(&_cmd, COMPILER);
     cmd_push(&_cmd, "-std=c89");
     cmd_push(&_cmd, stringf("-ffile-prefix-map=%s=", DIR_BUILDTOOL_BIN_ROOT));
-    cmd_push(&_cmd, "-Wall");
-    cmd_push(&_cmd, "-Wextra");
-    cmd_push(&_cmd, "-Wpedantic");
-    cmd_push(&_cmd, "-Wformat-truncation=0");
+    if (flag & FLAG_SELF_BUILD_DEBUG)
+    {
+        cmd_push(&_cmd, "-Wall");
+        cmd_push(&_cmd, "-Wextra");
+        cmd_push(&_cmd, "-Wpedantic");
+        cmd_push(&_cmd, "-Wformat-truncation=0");
+        cmd_push(&_cmd, "-ggdb");
+    }
     cmd_push(&_cmd, str_build_src);
     cmd_push(&_cmd, "-o");
     cmd_push(&_cmd, str_build_bin_new);
@@ -711,7 +725,8 @@ void help(void)
             "    help       print this help\n"
             "    show       show build command in list format\n"
             "    raw        show build command in raw format\n"
-            "    self       build build source\n");
+            "    self       build build source\n"
+            "    btdebug    build build source in debug mode\n");
     _exit(ERR_SUCCESS);
 }
 

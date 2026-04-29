@@ -27,3 +27,4 @@ cc build.c -o build
 >       - show:             show build command in list format
 >       - raw:              show build command in raw format
 >       - self:             re-build build source
+>       - btdebug:          re-build build source in debug mode (debug symbols and verbose logs)
