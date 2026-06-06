@@ -1,4 +1,4 @@
-# Buildtool
+# Buildtool - v1.8.5
 
 **A build tool written in C89, built in C89, builds C.**
 
