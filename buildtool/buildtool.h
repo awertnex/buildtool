@@ -26,6 +26,10 @@
 
 /* ---- section: changelog -------------------------------------------------- */
 
+/*  v1.8.7 (2026 06 07):
+ *      - (2026 06 07): fix version, because I released too quickly to check.
+ */
+
 /*  v1.8.6 (2026 06 07):
  *      - (2026 06 07): make function `copy_dir()` copy contents or dir itself
  *                      into destination based on whether destination exists or
@@ -297,7 +301,7 @@
 
 #define BUILDTOOL_VERSION_MAJOR 1
 #define BUILDTOOL_VERSION_MINOR 8
-#define BUILDTOOL_VERSION_PATCH 5
+#define BUILDTOOL_VERSION_PATCH 7
 #define BUILDTOOL_VERSION_BUILD BUILDTOOL_VERSION_STABLE
 
 #define COMPILER "cc"EXE
